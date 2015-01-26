@@ -54,7 +54,7 @@ end
 scanFolders = []
 destination = guessJettyFolder()
 warFiles = []
-logFile = nil
+$logFile = nil
 
 configFile.each_line {|line|
 
@@ -65,7 +65,7 @@ configFile.each_line {|line|
         elsif keyword == "AllowWarFile" then
             warFiles << line
         elsif keyword == "LogFile" then
-            logFile = line
+            $logFile = line
         else
             #this will use exit code 1 for us
             abort "unrecognized config option: " + keyword
@@ -76,6 +76,12 @@ configFile.each_line {|line|
 
 
 def log(line)
+    t = Time.new.strftime("%Y-%m-%d %H:%M:%S")
+    line = t + " " + line
+    if not $logFile.nil?
+        file = File.open($logFile, 'a')
+        file.puts line
+    end
     puts line
 end
 
@@ -112,6 +118,10 @@ def deployJetty(fromWar, toWar, touchFile)
 
 end
 
+
+
+log("running deployer script")
+
 scanFolders.each {|f|
     warFiles.each {|war|
 
@@ -127,8 +137,9 @@ scanFolders.each {|f|
             if not File.exist?(destFile) then
                 abort "destination war file does not already exist; aborting."
             end
-            puts "found file: " + filename
-            puts "moving to: " + destFile
+            log("found file: #{filename} moving to: #{destFile}")
+            #puts "found file: " + filename
+            #puts "moving to: " + destFile
             deployJetty(filename, destFile, config)
         end
 
